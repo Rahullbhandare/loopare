@@ -13,8 +13,18 @@ const MASCOT_URL =
 const SITE_URL = 'https://loopare.com'
 const ACCENT = '#1D4ED8'
 
+// firstName reaches here from a user-submitted form field. By the time it gets
+// here it's already passed join-waitlist's Zod validation (letters/marks/
+// spaces/apostrophe/hyphen/period only), which alone rules out HTML/script
+// metacharacters — this escape is a second, independent layer so this
+// function is safe even if called with unvalidated input from somewhere else
+// in the future.
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
+}
+
 export function buildWelcomeEmailHtml(firstName?: string) {
-  const greeting = firstName ? `Hi ${firstName},` : 'Hi there,'
+  const greeting = firstName ? `Hi ${escapeHtml(firstName)},` : 'Hi there,'
 
   return `<!doctype html>
 <html lang="en">
