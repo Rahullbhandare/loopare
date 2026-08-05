@@ -15,12 +15,54 @@
     <meta name="color-scheme" content="dark light" />
     <title>Loopare — Keep It Moving</title>
     <meta name="description" content="Loopare is India's premium circular marketplace — buy, sell, rent, barter, and trade services. Walk through Loopare World." />
+    <link rel="canonical" href="https://loopare.com/" />
     <link rel="icon" href="/assets/logo.png" type="image/png" />
+
+    <!-- Open Graph / Twitter Card — without these, a shared loopare.com link on
+         WhatsApp/X/LinkedIn/iMessage etc. renders as a bare, imageless text link
+         instead of a real preview card. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://loopare.com/" />
+    <meta property="og:title" content="Loopare — Keep It Moving" />
+    <meta property="og:description" content="Loopare is India's premium circular marketplace — buy, sell, rent, barter, and trade services. Walk through Loopare World." />
+    <meta property="og:image" content="https://loopare.com/assets/scene1.webp" />
+    <meta property="og:image:width" content="1920" />
+    <meta property="og:image:height" content="1080" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Loopare — Keep It Moving" />
+    <meta name="twitter:description" content="Loopare is India's premium circular marketplace — buy, sell, rent, barter, and trade services. Walk through Loopare World." />
+    <meta name="twitter:image" content="https://loopare.com/assets/scene1.webp" />
+
+    <!-- Preconnect to the one cross-origin host this page actually talks to (the
+         waitlist form's Supabase calls) — shaves the DNS/TLS handshake off the
+         critical path of the *first* request to it instead of paying that cost
+         only once the visitor actually submits the form. -->
+    <link rel="preconnect" href="https://rqmlzpednflxkykcugnk.supabase.co" crossorigin />
+
     <!-- Inline, render-blocking-safe: guarantees the background is never plain white
          before the real stylesheet finishes loading, on a slow mobile connection.
          Matches src/index.css's dark-theme default; the stylesheet takes over once
          it arrives. -->
     <style>html,body{background:#0E1116;margin:0;padding:0}</style>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Loopare",
+        "url": "https://loopare.com/",
+        "logo": "https://loopare.com/assets/logo-full.png",
+        "description": "Loopare is India's premium circular marketplace — buy, sell, rent, barter, and trade services.",
+        "sameAs": [
+          "https://www.instagram.com/loopareofficial/",
+          "https://www.youtube.com/@Loopare",
+          "https://x.com/loopareofficial",
+          "https://www.facebook.com/LoopareOfficial",
+          "https://www.reddit.com/user/LoopareOfficial",
+          "https://in.pinterest.com/loopareofficial/"
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
