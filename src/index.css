@@ -274,10 +274,13 @@ body {
   opacity: 0; /* inline style from the JS sync overrides this the instant it runs */
 }
 
-/* Scroll hint ("scroll to walk through...") text: black in dark mode — the default
-   --sw-ink-soft is a light grey/blue that washes out against the lighter, warmer
-   scenes even with the dark theme active. */
-.sw-root[data-theme="dark"] .sw-hint { color: #000 !important; }
+/* Scroll hint ("scroll to walk through...") text: white in dark mode, black in
+   light mode — the default --sw-ink-soft is a washed-out grey/blue that doesn't
+   read clearly against the scene photos in either theme. Applies at every
+   breakpoint (desktop and mobile share this rule; only font-size/wrapping is
+   overridden separately below for phones). */
+.sw-root[data-theme="dark"] .sw-hint { color: #fff !important; }
+.sw-root[data-theme="light"] .sw-hint { color: #000 !important; }
 
 /* On phones the engine's fixed 0.76rem/0.14em-tracked hint text wraps onto two lines
    ("SCROLL TO WALK THROUGH" / "LOOPARE WORLD") since its span has no width constraint
