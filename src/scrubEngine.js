@@ -136,9 +136,19 @@ function mountScrollWorld(container, config) {
   [sky, scrollbar, topbar, stage, copylayer, route, hint, track].forEach(n => container.appendChild(n));
 
   // segment scenes
-  SEGMENTS.forEach(s => {
+  SEGMENTS.forEach((s, i) => {
     const scene = el('div', 'sw-scene'); scene.style.setProperty('--sw-accent', s.accent || '');
-    const img = el('img', 'sw-scene__still'); img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
+    const img = el('img', 'sw-scene__still'); img.alt = ''; img.decoding = 'async';
+    // The first scene is visible the instant the page paints, before any scroll has
+    // happened — but it's nested inside a position:fixed layer within a very tall
+    // (12,000px+) scrolling document, and some browsers' loading="lazy" heuristic
+    // fails to recognize that as "in viewport" until a scroll/resize event fires,
+    // leaving a blank white screen on first load that only resolves once the visitor
+    // scrolls a little. Only the *first* scene needs to load eagerly for this — every
+    // other scene is genuinely off-screen at load time and still benefits from lazy
+    // loading normally.
+    img.loading = i === 0 ? 'eager' : 'lazy';
+    if (i === 0) img.fetchPriority = 'high';
     const poster = (isMobile() && s.stillM) ? s.stillM : s.still;
     if (poster) img.src = poster;
     scene.appendChild(img); stage.appendChild(scene);

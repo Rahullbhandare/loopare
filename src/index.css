@@ -701,3 +701,23 @@ body {
   .lf-footer__brandblock { padding: 20px 0 12px; }
 }
 
+/* Some Android/mobile browsers (reported: torn/duplicated frames, or a solid
+   flat-color rectangle where the scene should be, on a subset of devices — same
+   scroll position, same build, working fine on other phones) fail to correctly
+   repaint position:fixed layers during momentum scrolling, especially combined with
+   the URL bar showing/hiding and changing the viewport height mid-scroll. This is a
+   known class of mobile compositor bug, not specific to this site — forcing each
+   fixed layer onto its own GPU-composited layer (rather than letting the browser
+   decide, which is where the inconsistency between devices comes from) is the
+   standard mitigation. */
+.sw-sky,
+.sw-stage,
+.sw-copylayer,
+.sw-topbar {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
