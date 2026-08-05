@@ -15,6 +15,7 @@ body {
    direct declaration always wins over one only inherited from an ancestor like :root,
    regardless of layering. Matching the same selector is what lets ours win cleanly. */
 :root, .sw-root {
+  color-scheme: dark light;
   --sw-bg: #0E1116;
   --sw-ink: #F4F2ED;
   --sw-ink-soft: #ADB3BE;
