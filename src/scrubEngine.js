@@ -186,7 +186,7 @@ function mountScrollWorld(container, config) {
   // (where the copy peaks) and moves quicker near the seams. L=0 linear, L=1 full
   // mid-scene pause. f(0)=0, f(1)=1 always, so seam frames are untouched.
   const lingerEase = (x, L) => { L = clamp(L); const c = x - 0.5; return (1 - L) * x + L * (4 * c * c * c + 0.5); };
-  let vh = window.innerHeight, stageX = 0, totalW = 0, activeIndex = -1, ticking = false;
+  let vh = window.innerHeight, stageX = 0, totalW = 0, activeIndex = -1, activeSeg = 0, ticking = false;
   let laidOutW = window.innerWidth;   // width the current layout was computed at (see onResize)
 
   function layout() {
@@ -234,6 +234,7 @@ function mountScrollWorld(container, config) {
     const fade = CROSSFADE * vh;
     let ci = 0;
     for (let i = 0; i < NSEG; i++) if (y >= SEGMENTS[i].start) ci = i;
+    activeSeg = ci;
 
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
@@ -282,7 +283,8 @@ function mountScrollWorld(container, config) {
   }
 
   function raf() {
-    const eps = isMobile() ? 0.02 : 0.008;   // coarser seek step on phones = fewer decodes
+    const mobile = isMobile();
+    const eps = mobile ? 0.02 : 0.008;   // coarser seek step on phones = fewer decodes
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
       if (!s.hasClip || !s.ready || !s.video) continue;
@@ -290,6 +292,14 @@ function mountScrollWorld(container, config) {
       // On phones a fast flick would otherwise pile up seeks and freeze the clip;
       // cur keeps lerping, so we snap to the latest target the moment it's free.
       if (s.video.seeking) continue;
+      // On mobile, only the currently-active segment keeps scrubbing. A segment
+      // that's mid-crossfade-out (still visible, opacity heading to 0) would
+      // otherwise keep getting fresh seeks at the same time as the incoming
+      // segment — two <video> elements decoding concurrently, which is a known
+      // trigger for visible color corruption (green/purple frames) on weaker
+      // Android hardware decoders. Freezing its last frame while it dissolves
+      // away is a barely-perceptible tradeoff during a sub-second crossfade.
+      if (mobile && i !== activeSeg) continue;
       if (!s.visible && Math.abs(s.cur - s.target) < 0.002) continue;
       // An invisible segment has nothing left to visually smooth — the slow lerp
       // below exists purely so a *visible* crossfade's motion reads as continuous
@@ -345,6 +355,24 @@ function mountScrollWorld(container, config) {
   window.addEventListener('load', layout);
   layout();
   requestAnimationFrame(raf);
+
+  // Some mobile browsers lay out and paint the first scene correctly (per layout()'s
+  // own synchronous read() call above) but never actually *composite* the fixed-
+  // position .sw-sky/.sw-stage layers onto the screen until something forces a
+  // scroll-driven repaint — reported as a blank/white first scene that resolves the
+  // instant the visitor scrolls a little. Nudging the scroll position by a physically
+  // imperceptible 1px and back forces exactly that repaint via the same 'scroll'
+  // listener a real scroll would trigger, without moving the page. Runs once after
+  // paint (rAF) and again on 'load' in case the blank state only shows up once every
+  // resource — video/poster — has actually finished loading in.
+  function nudgeRepaint() {
+    if (!isMobile()) return;
+    const y = window.scrollY;
+    window.scrollTo(0, y + 1);
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  }
+  requestAnimationFrame(() => requestAnimationFrame(nudgeRepaint));
+  window.addEventListener('load', nudgeRepaint);
 
   // ---- helpers ----
   function el(tag, cls) { const n = document.createElement(tag); if (cls) n.className = cls; return n; }

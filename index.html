@@ -7,6 +7,11 @@
     <title>Loopare — Keep It Moving</title>
     <meta name="description" content="Loopare is India's premium circular marketplace — buy, sell, rent, barter, and trade services. Walk through Loopare World." />
     <link rel="icon" href="/assets/logo.png" type="image/png" />
+    <!-- Inline, render-blocking-safe: guarantees the background is never plain white
+         before the real stylesheet finishes loading, on a slow mobile connection.
+         Matches src/index.css's dark-theme default; the stylesheet takes over once
+         it arrives. -->
+    <style>html,body{background:#0E1116;margin:0;padding:0}</style>
   </head>
   <body>
     <div id="root"></div>
