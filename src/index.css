@@ -1,0 +1,703 @@
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; padding: 0; min-height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  /* Matches .lf-footer's own gradient start color — the scroll-scrub world's fixed
+     chrome (see the continuous scroll-linked fade in App.jsx) fades to transparent
+     over the last stretch of scroll before the footer, so whatever's behind it (this
+     background) needs to already read as "the footer" rather than flashing the
+     browser's default white or the world's own dark theme color. */
+  background: #030712;
+}
+
+/* Targets .sw-root (the engine sets this class on its mount container), not :root —
+   the engine's own defaults are declared directly on .sw-root inside @layer sw, and a
+   direct declaration always wins over one only inherited from an ancestor like :root,
+   regardless of layering. Matching the same selector is what lets ours win cleanly. */
+:root, .sw-root {
+  --sw-bg: #0E1116;
+  --sw-ink: #F4F2ED;
+  --sw-ink-soft: #ADB3BE;
+  --sw-accent: #1D4ED8;
+  --sw-font-display: ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif;
+  --sw-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: light) {
+  :root, .sw-root {
+    --sw-bg: #F5F2EC;
+    --sw-ink: #1B2430;
+    --sw-ink-soft: #616A78;
+    --sw-accent: #1D4ED8;
+  }
+}
+
+/* Explicit theme (from the dark/light toggle) always wins over the system-preference
+   media query above: an attribute selector on the same element has higher specificity
+   than the plain selector or the one nested in @media, regardless of source order. */
+:root[data-theme="dark"], .sw-root[data-theme="dark"] {
+  --sw-bg: #0E1116;
+  --sw-ink: #F4F2ED;
+  --sw-ink-soft: #ADB3BE;
+  --sw-accent: #1D4ED8;
+}
+:root[data-theme="light"], .sw-root[data-theme="light"] {
+  --sw-bg: #F5F2EC;
+  --sw-ink: #1B2430;
+  --sw-ink-soft: #616A78;
+  --sw-accent: #1D4ED8;
+}
+
+/* The engine's default mobile copy-block clearance (~12dvh above the hint) isn't enough
+   once a section has 3 tag pills wrapping to their own line — it collides with the
+   "scroll to..." hint on shorter phone viewports. Give it more headroom. */
+@media (max-width: 860px) {
+  .sw-copy { bottom: calc(clamp(96px, 18dvh, 150px) + env(safe-area-inset-bottom)) !important; }
+}
+
+/* Real Loopare logo: use the combined mark+wordmark lockup image (correct relative
+   sizing/spacing baked in) in place of the engine's separate mark-span + text-span,
+   which never lined up quite right. Aspect ratio of the source is 3264:1836
+   (~1.778:1). */
+.sw-brand__name { display: none !important; }
+.sw-brand__mark {
+  background: url('/assets/logo-full.png') left center / contain no-repeat !important;
+  box-shadow: none !important;
+  width: 210px !important;
+  height: 118px !important;
+  border-radius: 0 !important;
+}
+
+/* Top bar: .sw-topbar ends up with exactly 3 children after the JS restructure in
+   App.jsx (brand · center-group[CTA+nav] · toggle), which is what makes a real
+   `1fr auto 1fr` grid centering work — the center column sizes to its own content
+   and sits truly centered no matter how wide brand/CTA or the toggle are, instead of
+   the viewport-midpoint math that read as off-center with asymmetric side content. */
+.sw-topbar {
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center !important;
+  column-gap: 14px;
+}
+.sw-topbar__center {
+  display: flex;
+  align-items: center;
+  justify-self: center;
+}
+
+/* CTA fused into the same bar as the nav pills — same track, adjoining corners, no
+   gap — rather than a separate detached button, per feedback. */
+.sw-topcta {
+  display: flex !important;
+  align-items: center;
+  margin: 0 !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  /* Matched to the nav track's own rendered height (5px track padding + 7px pill
+     padding + ~16px line-height ≈ 40px) — it was taller than the track and visibly
+     poking out above/below it before. */
+  padding: 11px 28px !important;
+  font-size: 0.95rem !important;
+  background: var(--sw-accent) !important;
+  box-shadow:
+    0 0 26px 5px color-mix(in srgb, var(--sw-accent) 55%, transparent),
+    0 8px 20px color-mix(in srgb, var(--sw-accent) 50%, transparent);
+  position: relative;
+  z-index: 1;
+  transition: box-shadow 0.2s;
+}
+.sw-topcta:hover {
+  box-shadow:
+    0 0 34px 8px color-mix(in srgb, var(--sw-accent) 65%, transparent),
+    0 10px 24px color-mix(in srgb, var(--sw-accent) 58%, transparent);
+}
+.sw-root[data-active-index="6"] .sw-topcta { display: none !important; }
+
+/* The nav pill-track's own background/blur/border-radius live directly on .sw-nav,
+   so with .sw-nav no longer flex-stretched (see above) it hugs its actual pills —
+   no more dead space at the track's edges before the first / after the last pill. */
+.sw-nav {
+  margin: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+/* ...except when the CTA isn't there to adjoin (the last section, where it's hidden)
+   — then the nav track is on its own and should be fully rounded again, not flat on
+   the left where nothing is attached anymore. */
+.sw-root[data-active-index="6"] .sw-nav {
+  border-top-left-radius: 999px !important;
+  border-bottom-left-radius: 999px !important;
+}
+
+/* Nav pill text: black in dark mode specifically (the default near-white reads poorly
+   here per feedback) — the active pill keeps its blue background, only its text
+   color changes to match. */
+.sw-root[data-theme="dark"] .sw-nav__item,
+.sw-root[data-theme="dark"] .sw-nav__item:hover,
+.sw-root[data-theme="dark"] .sw-nav__item.is-active {
+  color: #000 !important;
+}
+
+/* Nav pills at in-between window widths: the engine's fixed font-size/padding has
+   nowhere to give, so once the 7 pills' combined width exceeds the available grid
+   column they wrap onto a second line mid-pill ("Buy" / "Sell") — broken instead of
+   just shrinking. clamp() lets both scale continuously with viewport width, and
+   nowrap plus a horizontal-scroll fallback (only kicks in if it's *still* too tight,
+   e.g. a very large number of sections) keeps it to one line no matter what. */
+.sw-nav__item {
+  font-size: clamp(0.66rem, 1vw, 0.82rem) !important;
+  padding: clamp(5px, 0.8vw, 7px) clamp(7px, 1.3vw, 14px) !important;
+  white-space: nowrap !important;
+  flex: 0 0 auto;
+}
+.sw-topbar__center, .sw-nav {
+  min-width: 0; /* lets the grid's `auto` track actually be constrained by the two
+                   1fr side columns instead of growing to fit every pill unshrunk —
+                   without this, min-width defaults to the content's full width and
+                   overflow/scroll below never gets a chance to kick in. */
+}
+.sw-nav {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sw-nav::-webkit-scrollbar { display: none; }
+
+/* Dark/light toggle switch, styled after a physical on/off switch rather than a plain
+   icon button: pill track, sliding circular knob with a moon/sun glyph inside. As the
+   third real grid child of .sw-topbar it's automatically right-aligned and vertically
+   centered with everything else in the row — no manual offsets needed. */
+.sw-theme-toggle {
+  justify-self: end;
+  width: 54px;
+  height: 30px;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  border: none;
+  border-radius: 999px;
+  background: #14161B;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.sw-theme-toggle[aria-checked="true"] { justify-content: flex-start; }
+.sw-theme-toggle[aria-checked="false"] { justify-content: flex-end; }
+.sw-theme-toggle__knob {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  color: #14161B;
+  display: grid;
+  place-items: center;
+  transition: transform 0.2s;
+}
+.sw-theme-toggle[aria-checked="false"] .sw-theme-toggle__knob { color: #E8A73B; }
+
+/* Mobile: the desktop sizes (bigger logo, fused CTA+nav bar) don't fit a phone-width
+   top bar at all — shrink each piece down and tighten the bar's own side padding/gap.
+   With the route rail removed entirely (below), the nav pills are now the *only* way
+   to jump between sections on a phone, so — unlike the engine's original design,
+   which hid nav on mobile in favor of the route rail — it has to stay visible here.
+   Every piece (logo, CTA, toggle, pill text/padding/gap) is shrunk as far as still
+   legible so all 7 pills have a real shot at fitting without needing to scroll; the
+   horizontal-scroll behavior stays on purely as a safety net for anything that still
+   doesn't fit on the very smallest phones, not the primary way to reach a pill. */
+@media (max-width: 860px) {
+  .sw-topbar { padding-left: 8px !important; padding-right: 8px !important; column-gap: 4px !important; }
+  /* The desktop layout's 1fr/auto/1fr grid relies on the side 1fr tracks shrinking to
+     fit their content, but a 1fr track's automatic minimum here resolved smaller than
+     the logo's actual rendered box once the center column claimed most of the bar —
+     the logo then visually overflowed its own track and overlapped the CTA pill
+     instead of the (safe, scrollable) nav track giving up the room. Reserving fixed
+     pixel widths for the side columns — sized to the logo/toggle exactly — makes that
+     overlap structurally impossible instead of just less likely. */
+  .sw-topbar { grid-template-columns: 100px 1fr 30px !important; }
+  .sw-brand__mark { width: 100px !important; height: 56px !important; }
+  /* justify-self:center (desktop's shrink-wrap-and-center trick, see above) sizes this
+     box to its own content and centers THAT over the track — fine when content fits,
+     but once topcta+nav together are wider than the track it just spills the overflow
+     symmetrically past both track edges, bleeding left into the logo's column. Mobile
+     has a fixed-width track now (see grid-template-columns above), so stretching to
+     fill it exactly keeps the box's edges pinned to the track regardless of content
+     width; the CTA keeps its natural size and the nav (already overflow-x:auto)
+     absorbs any remaining shrink internally instead of the whole group overflowing. */
+  .sw-topbar__center { justify-self: stretch !important; min-width: 0; }
+  .sw-topcta { padding: 4px 6px !important; font-size: 0.5rem !important; flex-shrink: 0; white-space: nowrap; }
+  /* flex-grow:0 (not 1) — nav's own rounded pill-track background covers its whole
+     box, so letting it grow to fill leftover space in the (now track-width-stretched)
+     center group just paints a big empty gray strip past the last pill. Hugging its
+     own content instead leaves any unused space as plain (invisible) page background;
+     overflow-x:auto/min-width:0 still cover the case where content doesn't fit. */
+  .sw-nav { display: flex !important; flex: 0 1 auto; max-width: none; min-width: 0; gap: 0 !important; padding: 2px !important; }
+  .sw-nav__item { font-size: 0.4rem !important; padding: 2.5px 3px !important; }
+  .sw-theme-toggle { width: 30px; height: 17px; }
+  .sw-theme-toggle__knob { width: 13px; height: 13px; }
+  .sw-theme-toggle__knob svg { width: 9px; height: 9px; }
+}
+
+/* The 860px breakpoint above was only ever verified around ~580-600px wide (the
+   browser automation tool used for QA has a resize floor there) — on an actual small
+   phone (~375px and below) the fixed sizes still don't leave the nav's own
+   max-width:62vw track enough room for all 7 pills, so it silently fell back to
+   horizontal-scroll instead of showing them all at once. Shrink every top-bar piece
+   further and give the nav a bigger share of the bar so the pills fit outright. */
+@media (max-width: 480px) {
+  .sw-topbar { padding-left: 3px !important; padding-right: 3px !important; column-gap: 2px !important; }
+  .sw-topbar { grid-template-columns: 76px 1fr 20px !important; }
+  .sw-brand__mark { width: 76px !important; height: 42px !important; }
+  .sw-topcta { padding: 3px 4px !important; font-size: 0.36rem !important; flex-shrink: 0; white-space: nowrap; }
+  .sw-nav { flex: 0 1 auto; max-width: none; min-width: 0; padding: 1px !important; }
+  .sw-nav__item { font-size: 0.28rem !important; padding: 1.5px 1.5px !important; letter-spacing: -0.03em; }
+  .sw-theme-toggle { width: 20px; height: 12px; }
+  .sw-theme-toggle__knob { width: 8px; height: 8px; }
+  .sw-theme-toggle__knob svg { width: 5px; height: 5px; }
+}
+
+/* Route rail (the vertical row of dots with hover labels on the right edge of the
+   screen) — removed entirely per feedback. */
+.sw-route { display: none !important; }
+
+/* Finale "Join Waitlist": relocated out of the text column entirely (see
+   relocateFinaleCta in App.jsx) to sit as an overlay directly on the Loop Plaza
+   scene, desktop only. Opacity/pointer-events are set inline by the JS sync in
+   App.jsx (mirroring .sw-copy's own gradual scroll-driven fade) rather than a CSS
+   transition here — a plain on/off transition tied to the active-section attribute
+   made it pop in well before the rest of the text had faded up. */
+.sw-finale-cta {
+  position: fixed;
+  z-index: 25;
+  left: 51%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0 !important;
+  opacity: 0; /* inline style from the JS sync overrides this the instant it runs */
+}
+
+/* Scroll hint ("scroll to walk through...") text: black in dark mode — the default
+   --sw-ink-soft is a light grey/blue that washes out against the lighter, warmer
+   scenes even with the dark theme active. */
+.sw-root[data-theme="dark"] .sw-hint { color: #000 !important; }
+
+/* On phones the engine's fixed 0.76rem/0.14em-tracked hint text wraps onto two lines
+   ("SCROLL TO WALK THROUGH" / "LOOPARE WORLD") since its span has no width constraint
+   of its own — force one line and let it shrink with viewport width instead. */
+@media (max-width: 860px) {
+  .sw-hint {
+    max-width: 94vw;
+  }
+  .sw-hint span {
+    white-space: nowrap;
+    font-size: clamp(0.5rem, 2.6vw, 0.76rem);
+    letter-spacing: 0.08em;
+  }
+}
+
+/* Join Waitlist CTA button (in-page, last section): the engine's default uses
+   --sw-ink (near-black/cream), which washes out against photo backgrounds. Use brand
+   blue, bigger, with a shadow so it reads clearly no matter what's behind it. Also
+   reordered to sit above the "07 / 07" counter — the very first thing in the block —
+   instead of at the bottom, so it isn't the last, easy-to-miss thing on the page. */
+.sw-copy {
+  display: flex;
+  flex-direction: column;
+}
+.sw-copy__cta { order: 1; margin: 0 0 22px !important; }
+.sw-copy__num { order: 2; }
+.sw-copy__eyebrow { order: 3; }
+/* Lets a section's title force a specific line break (a literal \n in the title
+   string in App.jsx) instead of leaving wrapping to the browser — the engine
+   HTML-escapes title text (see esc() in scrubEngine.js), which leaves real newline
+   characters untouched even though it'd strip an actual <br> tag, so this is the only
+   way to control the break reliably. Titles without a \n wrap exactly as before. */
+.sw-copy__title { order: 4; white-space: pre-line; }
+.sw-copy__body { order: 5; }
+.sw-copy__tags { order: 6; }
+.sw-copy__cta .sw-btn--primary {
+  background: var(--sw-accent) !important;
+  color: #fff !important;
+  font-size: 1.35rem !important;
+  padding: 24px 48px !important;
+  font-weight: 700 !important;
+  box-shadow:
+    0 0 40px 8px color-mix(in srgb, var(--sw-accent) 55%, transparent),
+    0 10px 30px color-mix(in srgb, var(--sw-accent) 55%, transparent);
+  transition: box-shadow 0.2s;
+}
+.sw-copy__cta .sw-btn--primary:hover {
+  box-shadow:
+    0 0 50px 10px color-mix(in srgb, var(--sw-accent) 65%, transparent),
+    0 14px 36px color-mix(in srgb, var(--sw-accent) 65%, transparent);
+}
+
+.sw-tagline {
+  order: 7; /* .sw-copy is now flex-reordered (see the CTA-reorder rules above); this
+               keeps the closing "Keep it moving." line pinned to the very end
+               regardless, since JS-appended elements default to order:0 otherwise. */
+  margin: 22px 0 0;
+  font-family: var(--sw-font-display);
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--sw-accent);
+}
+/* ---------------- Join Waitlist modal ---------------- */
+.lw-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: color-mix(in srgb, #000 55%, transparent);
+  backdrop-filter: blur(6px);
+  animation: lw-fade-in 0.25s ease both;
+}
+@keyframes lw-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.lw-card {
+  position: relative;
+  width: min(440px, 100%);
+  background: var(--sw-bg, #fff);
+  color: var(--sw-ink);
+  border-radius: 24px;
+  padding: 40px 34px 34px;
+  box-shadow: 0 30px 80px color-mix(in srgb, #000 35%, transparent);
+  animation: lw-pop-in 0.32s cubic-bezier(.2,.9,.3,1.3) both;
+}
+@keyframes lw-pop-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.lw-card__mark {
+  display: block;
+  width: 34px;
+  height: 22px;
+  margin-bottom: 18px;
+  background: url('/assets/logo.png') center / contain no-repeat;
+}
+.lw-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: color-mix(in srgb, var(--sw-ink) 8%, transparent);
+  color: var(--sw-ink);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.lw-close:hover { background: color-mix(in srgb, var(--sw-ink) 16%, transparent); }
+
+.lw-card__title {
+  font-family: var(--sw-font-display);
+  font-weight: 700;
+  font-size: clamp(1.3rem, 2.6vw, 1.6rem);
+  line-height: 1.2;
+  margin: 0 0 12px;
+}
+.lw-card__body {
+  margin: 0 0 24px;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--sw-ink-soft);
+}
+.lw-form { display: flex; flex-direction: column; gap: 12px; }
+.lw-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--sw-ink-soft);
+  margin: -2px 0 -6px 2px;
+}
+.lw-required { color: #E0483C; }
+.lw-input {
+  font: inherit;
+  font-size: 1rem;
+  padding: 15px 18px;
+  border-radius: 14px;
+  border: 1.5px solid color-mix(in srgb, var(--sw-ink) 18%, transparent);
+  background: color-mix(in srgb, var(--sw-ink) 4%, transparent);
+  color: var(--sw-ink);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.lw-input:focus { border-color: var(--sw-accent); }
+.lw-submit {
+  font: inherit;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 15px 22px;
+  border-radius: 14px;
+  border: none;
+  color: #fff;
+  background: var(--sw-accent);
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.lw-submit:hover:not(:disabled) { transform: translateY(-2px); }
+.lw-submit:disabled { opacity: 0.65; cursor: default; }
+.lw-error { margin: 0; font-size: 0.86rem; color: #E0483C; }
+
+.lw-success { text-align: center; padding: 10px 0 4px; }
+.lw-success__badge {
+  display: inline-block;
+  font-size: 2.6rem;
+  margin-bottom: 8px;
+  animation: lw-badge-pop 0.5s cubic-bezier(.2,.9,.3,1.4) both;
+}
+@keyframes lw-badge-pop {
+  0% { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(4deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+.lw-success .lw-card__title { margin-top: 4px; }
+.lw-success__tagline { margin-top: 20px; }
+
+/* ---------------- Footer ---------------- */
+/* Sits as a normal sibling after #world (the scroll-scrub mount point). The engine
+   gives that container its scrollable height purely via .sw-track, a plain
+   position:relative spacer — everything else in the world is position:fixed and
+   contributes nothing to document flow — so a normal-flow element placed right after
+   #world naturally only comes into view once the visitor has scrolled all the way
+   past the Loop Plaza finale, with no manual scroll-math needed.
+
+   Solid color, no overlap margin: the footer starts exactly where the scene's own
+   document flow ends, immediately below the still-sharp, still-opaque Loop Plaza
+   view (kept that way by keepFinalSceneVisible in App.jsx) — no gap, no fade, no
+   extra "in-between" content to scroll through, matching the reference exactly.
+   z-index has to comfortably beat the engine's own highest internal value (a scene
+   segment's active z-index is 120) or the footer would paint *underneath* the
+   still-fixed scene chrome instead of over it. */
+.lf-footer {
+  position: relative;
+  z-index: 200;
+  background: linear-gradient(160deg, #030712 0%, #071233 55%, #0B1E52 100%);
+  color: #C7D0E8;
+  padding: 32px clamp(20px, 5vw, 64px) 18px;
+}
+/* FAQ and the contact/social columns now sit side by side as one row (the border and
+   spacing that used to separate .lf-footer__top from the brand block below lives on
+   this wrapper instead, since .lf-footer__top is no longer the last thing before it). */
+.lf-footer__upper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+  border-bottom: 1px solid rgba(148, 172, 232, 0.16);
+  padding-bottom: 20px;
+  margin-bottom: 16px;
+}
+.lf-faq {
+  flex: 1 1 420px;
+  max-width: 640px;
+}
+.lf-faq .lf-footer__heading--plain { margin: 0 0 16px; }
+.lf-faq__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lf-faq__item {
+  border: 1px solid rgba(148, 172, 232, 0.22);
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(148, 172, 232, 0.04);
+}
+.lf-faq__question {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  color: #E8ECF7;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.lf-faq__icon {
+  position: relative;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+.lf-faq__icon::before,
+.lf-faq__icon::after {
+  content: '';
+  position: absolute;
+  background: #6E8CFF;
+  border-radius: 2px;
+  transition: transform 0.2s;
+}
+.lf-faq__icon::before { top: 8px; left: 0; width: 18px; height: 2px; }
+.lf-faq__icon::after { top: 0; left: 8px; width: 2px; height: 18px; }
+.lf-faq__item.is-open .lf-faq__icon::after { transform: rotate(90deg); }
+.lf-faq__answer {
+  margin: 0;
+  padding: 0 20px 18px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #AEB9DC;
+}
+
+.lf-footer__top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  justify-content: flex-end;
+  flex: 0 1 auto;
+}
+.lf-footer__col { min-width: 180px; }
+.lf-footer__heading {
+  margin: 0 0 14px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #7C8CB8;
+}
+/* "Follow us on" reads as a normal sentence-case line, not the small tracked-caps
+   label style "Business Enquiry" uses. */
+.lf-footer__heading--plain {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #E8ECF7;
+}
+.lf-footer__contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  min-height: 44px;
+  gap: 8px 24px;
+}
+.lf-footer__line { margin: 0; font-size: 1rem; }
+.lf-footer__label { color: #7C8CB8; margin-right: 4px; }
+.lf-footer__line a {
+  color: #E8ECF7;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.lf-footer__line a:hover { color: #6E8CFF; }
+.lf-footer__social {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.lf-footer__social-link {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: color-mix(in srgb, #E8ECF7 14%, transparent);
+  color: #E8ECF7;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.lf-footer__social-link:hover {
+  background: var(--sw-accent);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.lf-footer__brandblock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 0 16px;
+  text-align: center;
+}
+.lf-footer__mark {
+  width: 150px;
+  height: 47px;
+  background: url('/assets/logo-icon.png') center / contain no-repeat;
+  filter: brightness(0) invert(1);
+  opacity: 0.94;
+}
+.lf-footer__tagline {
+  margin: 0;
+  font-family: var(--sw-font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #6E8CFF;
+}
+.lf-footer__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: #647096;
+}
+.lf-footer__bottom p { margin: 0; }
+.lf-footer__legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.lf-footer__legal button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.82rem;
+  color: #647096;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.lf-footer__legal button:hover { color: #6E8CFF; }
+
+/* ---------------- Legal policy modal ---------------- */
+/* Reuses .lw-backdrop/.lw-card (the waitlist modal's own styling) for a consistent
+   popup look, with a wider/taller variant since policy text needs real room to
+   breathe and its own internal scroll instead of the compact waitlist form's size. */
+.lg-card {
+  width: min(620px, 100%);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+}
+.lg-body {
+  overflow-y: auto;
+  padding-right: 4px;
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--sw-ink-soft);
+}
+.lg-body p { margin: 0 0 14px; }
+.lg-body h4 {
+  margin: 20px 0 8px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--sw-ink);
+}
+.lg-body h4:first-child { margin-top: 0; }
+.lg-body a { color: var(--sw-accent); }
+
+@media (max-width: 640px) {
+  .lf-footer {
+    padding: 24px 20px 16px;
+  }
+  .lf-footer__top { justify-content: flex-start; gap: 32px; }
+  .lf-footer__mark { width: 120px; height: 38px; }
+  .lf-footer__brandblock { padding: 20px 0 12px; }
+}
+
