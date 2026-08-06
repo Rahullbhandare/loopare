@@ -1,5 +1,18 @@
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; padding: 0; min-height: 100%; }
+
+/* #world (App.jsx) renders as an empty <div> — every scene layer, and the huge
+   scroll-track spacer that gives the page its actual scrollable height, are built
+   imperatively inside a useEffect in mountScrollWorld, which only runs *after*
+   React's first paint. In the gap between that first paint and the effect firing,
+   #world has zero height, so the Footer sitting right after it in normal document
+   flow (see .lf-footer below) briefly renders at the very top of the page — the
+   reported "FAQ/footer flashes, then the homepage appears" on first load, on every
+   device, since it's a React mount-timing gap rather than anything device-specific.
+   One viewport of reserved height is enough to keep Footer off-screen for that gap
+   regardless of the page's real (much taller) eventual height, which JS sets as an
+   inline style once mounted and always wins over this. */
+#world { min-height: 100vh; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
   /* Matches .lf-footer's own gradient start color — the scroll-scrub world's fixed
