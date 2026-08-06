@@ -114,12 +114,15 @@ body {
 }
 
 /* Nav pill text: black in dark mode specifically (the default near-white reads poorly
-   here per feedback) — the active pill keeps its blue background, only its text
-   color changes to match. */
+   here per feedback) — but NOT the active pill, which sits on a solid blue
+   background rather than the light gray track: black-on-blue was hard to read, it
+   needs to stay white like the engine's own default for .is-active. */
 .sw-root[data-theme="dark"] .sw-nav__item,
-.sw-root[data-theme="dark"] .sw-nav__item:hover,
-.sw-root[data-theme="dark"] .sw-nav__item.is-active {
+.sw-root[data-theme="dark"] .sw-nav__item:hover {
   color: #000 !important;
+}
+.sw-root[data-theme="dark"] .sw-nav__item.is-active {
+  color: #fff !important;
 }
 
 /* Nav pills at in-between window widths: the engine's fixed font-size/padding has
