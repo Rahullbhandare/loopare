@@ -21,6 +21,7 @@ const sections = [
     title: "An item finds its next owner.",
     body: "One person's unused item becomes exactly what you've been looking for.",
     tags: [],
+    cta: { primary: { label: 'Join Waitlist', href: '#waitlist' } },
   },
   {
     id: 'cafe',
@@ -36,6 +37,7 @@ const sections = [
     title: 'Talent is\nvaluable too.',
     body: "Trade what you know for what you'd love to learn.",
     tags: [],
+    cta: { primary: { label: 'Join Waitlist', href: '#waitlist' } },
   },
   {
     id: 'campus',
@@ -51,6 +53,7 @@ const sections = [
     title: 'One Swap,\nTwo Winners.',
     body: 'Exchange what they need for an item you need.',
     tags: [],
+    cta: { primary: { label: 'Join Waitlist', href: '#waitlist' } },
   },
   {
     id: 'metro',
@@ -66,6 +69,7 @@ const sections = [
     title: 'Sometimes you only need an item for a while.',
     body: 'Rent what you need, only for as long as you need it.',
     tags: [],
+    cta: { primary: { label: 'Join Waitlist', href: '#waitlist' } },
   },
   {
     id: 'cafeblue',
@@ -81,6 +85,7 @@ const sections = [
     title: 'Communities grow when people help each other.',
     body: 'Someone needs your skills, while you need their products or services.',
     tags: [],
+    cta: { primary: { label: 'Join Waitlist', href: '#waitlist' } },
   },
   {
     id: 'harbor',
@@ -96,6 +101,7 @@ const sections = [
     title: 'From One Family to Another.',
     body: 'What your family has outgrown could be exactly what another family has been looking for.',
     tags: [],
+    cta: { primary: { label: 'Join Waitlist', href: '#waitlist' } },
   },
   {
     id: 'plaza',
@@ -115,23 +121,21 @@ const sections = [
   },
 ]
 
-// The engine builds brand / nav / topcta as flat siblings of .sw-topbar, with no
-// wrapper elements — there's nowhere to hook true "center regardless of side widths"
-// layout, and nowhere to visually fuse the CTA into the nav pill-track. Restructuring
-// this once after mount (rather than patching per-render) gives the topbar exactly
-// three children — brand, a center group holding [CTA, nav] fused together, and the
-// (portaled) theme toggle — which lines up 1:1 with a `grid-template-columns:
-// 1fr auto 1fr` layout for true holy-grail centering.
+// The engine builds brand / nav as flat siblings of .sw-topbar, with no wrapper
+// elements — there's nowhere to hook true "center regardless of side widths"
+// layout. Restructuring this once after mount (rather than patching per-render)
+// gives the topbar exactly three children — brand, a center group holding nav,
+// and the (portaled) theme toggle — which lines up 1:1 with a
+// `grid-template-columns: 1fr auto 1fr` layout for true holy-grail centering.
+// (No top-bar CTA anymore — every section has its own "Join Waitlist" button in
+// its copy block instead; see `sections` above.)
 function restructureTopbar(container) {
   const topbar = container.querySelector('.sw-topbar')
-  const brand = topbar?.querySelector('.sw-brand')
-  const topcta = topbar?.querySelector('.sw-topcta')
   const nav = topbar?.querySelector('.sw-nav')
   if (!topbar || !nav) return topbar
   const center = document.createElement('div')
   center.className = 'sw-topbar__center'
   topbar.insertBefore(center, nav)
-  if (topcta) center.appendChild(topcta)
   center.appendChild(nav)
   return topbar
 }
@@ -245,7 +249,6 @@ export default function App() {
       atmosphere: true,
       sections,
       connectors: [],
-      cta: { label: 'Join Waitlist', href: '#waitlist' },
     })
 
     mountTagline(container, sections.length)
@@ -258,11 +261,11 @@ export default function App() {
     setTopbarEl(topbar)
 
     // The engine builds its CTA buttons as plain vanilla DOM, so they're wired via
-    // delegation rather than a React onClick — both open the same React-rendered modal.
-    // The top-bar one (.sw-topcta) auto-hides on the last section via CSS, since that
-    // section already shows its own large in-content CTA.
+    // delegation rather than a React onClick — every section now has its own
+    // "Join Waitlist" button in its copy block (see `sections` above), all opening
+    // the same React-rendered modal.
     const onContainerClick = (e) => {
-      if (e.target.closest('.sw-copy__cta .sw-btn--primary') || e.target.closest('.sw-topcta')) {
+      if (e.target.closest('.sw-copy__cta .sw-btn--primary')) {
         e.preventDefault()
         setWaitlistOpen(true)
       }

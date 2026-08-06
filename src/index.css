@@ -83,9 +83,9 @@ body {
 }
 
 /* Top bar: .sw-topbar ends up with exactly 3 children after the JS restructure in
-   App.jsx (brand · center-group[CTA+nav] · toggle), which is what makes a real
+   App.jsx (brand · center-group[nav] · toggle), which is what makes a real
    `1fr auto 1fr` grid centering work — the center column sizes to its own content
-   and sits truly centered no matter how wide brand/CTA or the toggle are, instead of
+   and sits truly centered no matter how wide the nav or the toggle are, instead of
    the viewport-midpoint math that read as off-center with asymmetric side content. */
 .sw-topbar {
   display: grid !important;
@@ -99,48 +99,12 @@ body {
   justify-self: center;
 }
 
-/* CTA fused into the same bar as the nav pills — same track, adjoining corners, no
-   gap — rather than a separate detached button, per feedback. */
-.sw-topcta {
-  display: flex !important;
-  align-items: center;
-  margin: 0 !important;
-  border-top-right-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-  /* Matched to the nav track's own rendered height (5px track padding + 7px pill
-     padding + ~16px line-height ≈ 40px) — it was taller than the track and visibly
-     poking out above/below it before. */
-  padding: 11px 28px !important;
-  font-size: 0.95rem !important;
-  background: var(--sw-accent) !important;
-  box-shadow:
-    0 0 26px 5px color-mix(in srgb, var(--sw-accent) 55%, transparent),
-    0 8px 20px color-mix(in srgb, var(--sw-accent) 50%, transparent);
-  position: relative;
-  z-index: 1;
-  transition: box-shadow 0.2s;
-}
-.sw-topcta:hover {
-  box-shadow:
-    0 0 34px 8px color-mix(in srgb, var(--sw-accent) 65%, transparent),
-    0 10px 24px color-mix(in srgb, var(--sw-accent) 58%, transparent);
-}
-.sw-root[data-active-index="6"] .sw-topcta { display: none !important; }
-
-/* The nav pill-track's own background/blur/border-radius live directly on .sw-nav,
-   so with .sw-nav no longer flex-stretched (see above) it hugs its actual pills —
-   no more dead space at the track's edges before the first / after the last pill. */
+/* No top-bar CTA anymore — every section has its own "Join Waitlist" button in its
+   copy block instead (see .sw-copy__cta below), so the nav pill-track is always on
+   its own now and always fully rounded, not flat on one edge waiting for something
+   to adjoin. */
 .sw-nav {
   margin: 0 !important;
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
-}
-/* ...except when the CTA isn't there to adjoin (the last section, where it's hidden)
-   — then the nav track is on its own and should be fully rounded again, not flat on
-   the left where nothing is attached anymore. */
-.sw-root[data-active-index="6"] .sw-nav {
-  border-top-left-radius: 999px !important;
-  border-bottom-left-radius: 999px !important;
 }
 
 /* Nav pill text: black in dark mode specifically (the default near-white reads poorly
@@ -207,7 +171,7 @@ body {
 }
 .sw-theme-toggle[aria-checked="false"] .sw-theme-toggle__knob { color: #E8A73B; }
 
-/* Mobile: the desktop sizes (bigger logo, fused CTA+nav bar) don't fit a phone-width
+/* Mobile: the desktop sizes (bigger logo, wider nav bar) don't fit a phone-width
    top bar at all — shrink each piece down and tighten the bar's own side padding/gap.
    With the route rail removed entirely (below), the nav pills are now the *only* way
    to jump between sections on a phone, so — unlike the engine's original design,
@@ -221,7 +185,7 @@ body {
   /* The desktop layout's 1fr/auto/1fr grid relies on the side 1fr tracks shrinking to
      fit their content, but a 1fr track's automatic minimum here resolved smaller than
      the logo's actual rendered box once the center column claimed most of the bar —
-     the logo then visually overflowed its own track and overlapped the CTA pill
+     the logo then visually overflowed its own track and overlapped the nav pills
      instead of the (safe, scrollable) nav track giving up the room. Reserving fixed
      pixel widths for the side columns — sized to the logo/toggle exactly — makes that
      overlap structurally impossible instead of just less likely. */
@@ -229,14 +193,13 @@ body {
   .sw-brand__mark { width: 100px !important; height: 56px !important; }
   /* justify-self:center (desktop's shrink-wrap-and-center trick, see above) sizes this
      box to its own content and centers THAT over the track — fine when content fits,
-     but once topcta+nav together are wider than the track it just spills the overflow
-     symmetrically past both track edges, bleeding left into the logo's column. Mobile
-     has a fixed-width track now (see grid-template-columns above), so stretching to
-     fill it exactly keeps the box's edges pinned to the track regardless of content
-     width; the CTA keeps its natural size and the nav (already overflow-x:auto)
-     absorbs any remaining shrink internally instead of the whole group overflowing. */
+     but once nav is wider than the track it just spills the overflow symmetrically
+     past both track edges, bleeding left into the logo's column. Mobile has a
+     fixed-width track now (see grid-template-columns above), so stretching to fill it
+     exactly keeps the box's edges pinned to the track regardless of content width;
+     the nav (already overflow-x:auto) absorbs any remaining shrink internally instead
+     of the whole group overflowing. */
   .sw-topbar__center { justify-self: stretch !important; min-width: 0; }
-  .sw-topcta { padding: 4px 6px !important; font-size: 0.5rem !important; flex-shrink: 0; white-space: nowrap; }
   /* flex-grow:0 (not 1) — nav's own rounded pill-track background covers its whole
      box, so letting it grow to fill leftover space in the (now track-width-stretched)
      center group just paints a big empty gray strip past the last pill. Hugging its
@@ -259,7 +222,6 @@ body {
   .sw-topbar { padding-left: 3px !important; padding-right: 3px !important; column-gap: 2px !important; }
   .sw-topbar { grid-template-columns: 76px 1fr 20px !important; }
   .sw-brand__mark { width: 76px !important; height: 42px !important; }
-  .sw-topcta { padding: 3px 4px !important; font-size: 0.36rem !important; flex-shrink: 0; white-space: nowrap; }
   .sw-nav { flex: 0 1 auto; max-width: none; min-width: 0; padding: 1px !important; }
   .sw-nav__item { font-size: 0.28rem !important; padding: 1.5px 1.5px !important; letter-spacing: -0.03em; }
   .sw-theme-toggle { width: 20px; height: 12px; }
