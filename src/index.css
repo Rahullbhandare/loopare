@@ -96,6 +96,12 @@ body {
 .sw-topbar__center {
   display: flex;
   align-items: center;
+  /* No-op on desktop (the box shrink-wraps to nav's own width via justify-self:
+     center below, so there's no extra space to distribute) — but on mobile this
+     box is stretched to fill the whole center grid column, and without this, nav
+     (its only child) sits at the flex container's default start edge instead of
+     centering within it. */
+  justify-content: center;
   justify-self: center;
 }
 
@@ -181,7 +187,10 @@ body {
    horizontal-scroll behavior stays on purely as a safety net for anything that still
    doesn't fit on the very smallest phones, not the primary way to reach a pill. */
 @media (max-width: 860px) {
-  .sw-topbar { padding-left: 8px !important; padding-right: 8px !important; column-gap: 4px !important; }
+  /* padding-right bumped from 8px: the theme toggle sits justify-self:end within
+     its own grid column, so this padding is the only thing standing between it and
+     the true screen edge — 8px read as "cut off"/no breathing room on real phones. */
+  .sw-topbar { padding-left: 8px !important; padding-right: 14px !important; column-gap: 4px !important; }
   /* The desktop layout's 1fr/auto/1fr grid relies on the side 1fr tracks shrinking to
      fit their content, but a 1fr track's automatic minimum here resolved smaller than
      the logo's actual rendered box once the center column claimed most of the bar —
@@ -206,7 +215,11 @@ body {
      own content instead leaves any unused space as plain (invisible) page background;
      overflow-x:auto/min-width:0 still cover the case where content doesn't fit. */
   .sw-nav { display: flex !important; flex: 0 1 auto; max-width: none; min-width: 0; gap: 0 !important; padding: 2px !important; }
-  .sw-nav__item { font-size: 0.4rem !important; padding: 2.5px 3px !important; }
+  /* Sized up now that there's no top-bar CTA sharing this column with nav anymore
+     (see the .sw-topcta removal above) — there's real headroom to make these
+     legible without reintroducing the wrap-onto-two-lines problem the small sizes
+     above were originally tuned to avoid. */
+  .sw-nav__item { font-size: 0.52rem !important; padding: 4px 6px !important; }
   .sw-theme-toggle { width: 30px; height: 17px; }
   .sw-theme-toggle__knob { width: 13px; height: 13px; }
   .sw-theme-toggle__knob svg { width: 9px; height: 9px; }
@@ -219,11 +232,13 @@ body {
    horizontal-scroll instead of showing them all at once. Shrink every top-bar piece
    further and give the nav a bigger share of the bar so the pills fit outright. */
 @media (max-width: 480px) {
-  .sw-topbar { padding-left: 3px !important; padding-right: 3px !important; column-gap: 2px !important; }
+  /* padding-right bumped from 3px for the same reason as the 860px breakpoint
+     above — the theme toggle was flush against the true screen edge. */
+  .sw-topbar { padding-left: 6px !important; padding-right: 12px !important; column-gap: 2px !important; }
   .sw-topbar { grid-template-columns: 76px 1fr 20px !important; }
   .sw-brand__mark { width: 76px !important; height: 42px !important; }
   .sw-nav { flex: 0 1 auto; max-width: none; min-width: 0; padding: 1px !important; }
-  .sw-nav__item { font-size: 0.28rem !important; padding: 1.5px 1.5px !important; letter-spacing: -0.03em; }
+  .sw-nav__item { font-size: 0.36rem !important; padding: 2.5px 3px !important; letter-spacing: -0.02em; }
   .sw-theme-toggle { width: 20px; height: 12px; }
   .sw-theme-toggle__knob { width: 8px; height: 8px; }
   .sw-theme-toggle__knob svg { width: 5px; height: 5px; }
@@ -306,6 +321,16 @@ body {
   box-shadow:
     0 0 50px 10px color-mix(in srgb, var(--sw-accent) 65%, transparent),
     0 14px 36px color-mix(in srgb, var(--sw-accent) 65%, transparent);
+}
+/* The desktop size (1.35rem/24px 48px) reads oversized against the more compact
+   mobile copy block — every section now has this button, not just the finale, so
+   it needs to sit comfortably alongside the rest of that scene's text rather than
+   dominate it. */
+@media (max-width: 860px) {
+  .sw-copy__cta .sw-btn--primary {
+    font-size: 1.05rem !important;
+    padding: 15px 30px !important;
+  }
 }
 
 .sw-tagline {
