@@ -222,7 +222,7 @@ body {
      (see the .sw-topcta removal above) — there's real headroom to make these
      legible without reintroducing the wrap-onto-two-lines problem the small sizes
      above were originally tuned to avoid. */
-  .sw-nav__item { font-size: 0.52rem !important; padding: 4px 6px !important; }
+  .sw-nav__item { font-size: 0.68rem !important; padding: 6px 9px !important; }
   .sw-theme-toggle { width: 30px; height: 17px; }
   .sw-theme-toggle__knob { width: 13px; height: 13px; }
   .sw-theme-toggle__knob svg { width: 9px; height: 9px; }
@@ -241,7 +241,7 @@ body {
   .sw-topbar { grid-template-columns: 76px 1fr 20px !important; }
   .sw-brand__mark { width: 76px !important; height: 42px !important; }
   .sw-nav { flex: 0 1 auto; max-width: none; min-width: 0; padding: 1px !important; }
-  .sw-nav__item { font-size: 0.36rem !important; padding: 2.5px 3px !important; letter-spacing: -0.02em; }
+  .sw-nav__item { font-size: 0.46rem !important; padding: 3.5px 5px !important; letter-spacing: -0.01em; }
   .sw-theme-toggle { width: 20px; height: 12px; }
   .sw-theme-toggle__knob { width: 8px; height: 8px; }
   .sw-theme-toggle__knob svg { width: 5px; height: 5px; }
@@ -331,8 +331,8 @@ body {
    dominate it. */
 @media (max-width: 860px) {
   .sw-copy__cta .sw-btn--primary {
-    font-size: 1.05rem !important;
-    padding: 15px 30px !important;
+    font-size: 0.85rem !important;
+    padding: 11px 22px !important;
   }
 }
 
